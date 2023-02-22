@@ -4,7 +4,7 @@
 	This file contains the input port of the master port.
 	It is responsible for receiving the data from 
 	the slave.
- Maintainers : Sahan Viduranga <sthiranjaya@gmail.com>
+ Maintainers : Sahan Viduranga <sahanvidurangassc767@gmail.com>
 					
 					
  Revision : v1.0 
