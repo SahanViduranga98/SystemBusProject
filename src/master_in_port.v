@@ -24,7 +24,6 @@ module master_in_port #(parameter DATA_LEN=8, parameter BURST_LEN=12)(
 	input rx_data,
 	input slave_valid,
 	output reg master_ready);
-	//output reg read_en);
 	
 reg [2:0]state = 0;
 reg [DATA_LEN-1:0]temp_data;
@@ -35,6 +34,7 @@ integer burst_count = 0;
 
 always @ (posedge clk or posedge reset) 
 begin
+    //if reset is high, back to start position
 	if (reset)
 	begin
 		count <= 0;
@@ -45,7 +45,7 @@ begin
 		new_rx <= 0;
 		master_ready <= 1;
 		burst_count <= 0;
-		//read_en <= 0;
+		
 	end	
 	
 	else
@@ -53,6 +53,7 @@ begin
 		
 		IDLE:
 		begin
+            //go to hand_shake state
 			if (instruction == 2'b11 && tx_done == 1)
 			begin
 				count <= 0;
@@ -63,10 +64,11 @@ begin
 				new_rx <= 0;
 				master_ready <= 1;
 				burst_count <= 0;
-				//read_en <= 0;
+				
 			end
 			
 			else
+            //stay in the idle state
 			begin
 				count <= count;
 				state <= IDLE;
@@ -76,27 +78,29 @@ begin
 				new_rx <= 0;
 				master_ready <= 1;
 				burst_count <= burst_count;
-				//read_en <= 0;
+				
 			end
 		end
 		
 		WAIT_HANDSHAKE:
 		begin
+            //go to receive_data state
 			if (slave_valid == 1 && master_ready == 1)
 			begin
 				count <= count + 1;
 				state <= RECEIVE_DATA;
 				temp_data[count] <= rx_data;
 				data <= data;	
-				//data[DATA_LEN-1:count+1] <= data[DATA_LEN-1:count+1];
+				
 				rx_done <= rx_done;
 				new_rx <= 0;
 				master_ready <= 0;
 				burst_count <= burst_count;
-				//read_en <= read_en;
+				
 			end
 			
 			else
+            //stay in the wait_handshake state
 			begin
 				count <= count;
 				state <= WAIT_HANDSHAKE;
@@ -106,7 +110,7 @@ begin
 				new_rx <= 0;
 				master_ready <= 1;
 				burst_count <= burst_count;
-				//read_en <= read_en;
+				
 			end
 		end
 		
@@ -127,23 +131,23 @@ begin
 					rx_done <= 0;
 					burst_count <= burst_count+1;
 				end
-				//data[count-1:0] <= data[count-1:0];
+				
 				new_rx <= 1;
 				temp_data[count] <= rx_data;
 				data[count] <= rx_data;
 				data[DATA_LEN-2:0] <= temp_data[DATA_LEN-2:0];
 				master_ready <= 1;
-				//read_en <= read_en;
+				
 			end
 			
 			else
+            //stay in receive_data state
 			begin
 				count <= count + 1;
 				state <= RECEIVE_DATA;
-				//data[count-1:0] <= data[count-1:0];
 				temp_data[count] <= rx_data;
 				data <= data;	
-				//data[DATA_LEN-1:count+1] <= data[DATA_LEN-1:count+1];
+				/
 				rx_done <= rx_done;
 				new_rx <= new_rx;
 				master_ready <= 0;
