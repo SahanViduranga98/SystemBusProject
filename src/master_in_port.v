@@ -147,12 +147,10 @@ begin
 				state <= RECEIVE_DATA;
 				temp_data[count] <= rx_data;
 				data <= data;	
-				/
 				rx_done <= rx_done;
 				new_rx <= new_rx;
 				master_ready <= 0;
 				burst_count <= burst_count;
-				//read_en <= read_en;
 			end
 		end
 		
@@ -166,7 +164,6 @@ begin
 			new_rx <= 0;
 			master_ready <= 1;
 			burst_count <= burst_count;
-			//read_en <= 0;
 		end
 		
 		endcase
