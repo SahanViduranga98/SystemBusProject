@@ -116,16 +116,20 @@ begin
 		
 		RECEIVE_DATA:
 		begin
+            //if received the data completlly
 			if (count >= DATA_LEN-1)
 			begin
 				count <= 0;
+                //check whether the last data is received
 				if (burst_count >= burst_num)
+                //then go to idle state and rx_done signal high
 				begin
 					state <= IDLE;
 					rx_done <= 1;
 					burst_count <= burst_count;
 				end
 				else
+                //else wait in he wait_handshake state, burst is not complete yet
 				begin
 					state <= WAIT_HANDSHAKE;
 					rx_done <= 0;
