@@ -116,7 +116,7 @@ begin
 		
 		RECEIVE_DATA:
 		begin
-            //if received the data completlly
+            //if received the data bits completlly
 			if (count >= DATA_LEN-1)
 			begin
 				count <= 0;
@@ -136,7 +136,7 @@ begin
 					burst_count <= burst_count+1;
 				end
 				
-				new_rx <= 1;
+				new_rx <= 1; //new data is done receiving
 				temp_data[count] <= rx_data;
 				data[count] <= rx_data;
 				data[DATA_LEN-2:0] <= temp_data[DATA_LEN-2:0];
