@@ -26,8 +26,8 @@ input clk,
 input rst, //system reset 
 input m1_request,
 input m2_request,
-input m1_slave_sel,
-input m2_slave_sel,
+input [1:0] m1_slave_sel,
+input [1:0] m2_slave_sel,
 
 
 output reg m1_grant,
@@ -41,11 +41,8 @@ output reg[1:0] slave_sel
 parameter[2:0] IDLE_STATE = 3'd0;
 parameter[2:0] MASTER1_SLAVE_SELECT_STATE = 3'd1;
 parameter[2:0] MASTER2_SLAVE_SELECT_STATE  = 3'd2;
-parameter SEL0=0, SEL1=1;
-
 
 reg [2:0] state = IDLE_STATE;
-reg [1:0] SEL_STATE = SEL0;
 
 always@(posedge clk or posedge rst)
 begin
@@ -54,8 +51,8 @@ begin
             m1_grant <= 0;
             m2_grant <= 0;
             arbiter_busy <= 0;
-            bus_grant <= 2'd0;
-            slave_sel  <= 2'd0; 
+            bus_grant <= 2'b00;
+            slave_sel  <= 2'b00; 
         end
     // if master 1 request it since it is the highest priority master,
     // make the next state as MASTER1_REQUEST_STATE
@@ -64,8 +61,8 @@ begin
             m1_grant <= 1;
             m2_grant <= 0;
             arbiter_busy <= 1;
-            bus_grant <= 2'd1;
-            slave_sel  <= 2'd0;
+            bus_grant <= 2'b01;
+            slave_sel  <= 2'b00;
             state <= MASTER1_SLAVE_SELECT_STATE;
          end
          
@@ -76,8 +73,8 @@ begin
             m1_grant <= 0;
             m2_grant <= 1;
             arbiter_busy <= 1;
-            bus_grant <= 2'd2;
-            slave_sel  <= 2'd0;
+            bus_grant <= 2'b10;
+            slave_sel  <= 2'b00;
             state <= MASTER2_SLAVE_SELECT_STATE;
         end
      else
@@ -85,8 +82,8 @@ begin
             m1_grant <= 0;
             m2_grant <= 0;
             arbiter_busy <= 0;
-            bus_grant <= 2'd0;
-            slave_sel  <= 2'd0;
+            bus_grant <= 2'b00;
+            slave_sel  <= 2'b00;
             state <= IDLE_STATE;  
         end    
 
@@ -97,44 +94,22 @@ always @(posedge clk)
         case(state)
         MASTER1_SLAVE_SELECT_STATE:
             begin
-                case(SEL_STATE)
-                    SEL0:
-                        begin
-                        slave_sel[0]<=m1_slave_sel;
-                        SEL_STATE<=SEL1;
-                        end
-                    SEL1:
-                        begin
-                        slave_sel[1]<=m1_slave_sel;
-                        SEL_STATE<=SEL0;
-                        state<=IDLE_STATE;
-                        end
-                 endcase
+                slave_sel <= m1_slave_sel;
+                state<=IDLE_STATE;
+            end
+             
+        MASTER2_SLAVE_SELECT_STATE:
+            begin
+                slave_sel <= m2_slave_sel; 
+                state<=IDLE_STATE;
+            end
+              
+        IDLE_STATE:
+             begin
+                slave_sel <= 2'b0;
+                arbiter_busy <= 0;      
              end
              
-         MASTER2_SLAVE_SELECT_STATE:
-             begin
-                 case(SEL_STATE)
-                     SEL0:
-                         begin
-                         slave_sel[0]<=m2_slave_sel;
-                         SEL_STATE<=SEL1;
-                         end
-                     SEL1:
-                         begin
-                         slave_sel[1]<=m2_slave_sel;
-                         SEL_STATE<=SEL0;
-                         state<=IDLE_STATE;
-                         end
-                  endcase
-              end
-              
-           IDLE_STATE:
-               begin
-                   slave_sel = 2'b0;
-                   arbiter_busy <= 0;   
-                   
-               end
         endcase
 
     end
