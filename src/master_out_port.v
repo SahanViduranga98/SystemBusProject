@@ -270,12 +270,15 @@ begin
 				approval_request <= 0;
 				tx_slave_select <= tx_slave_select;
 				master_valid <= 1;
+
+			// instruction==1--->read enable
 				if (instruction[0]==1)
 				begin
 					write_en <= 0;
 					read_en <= 1;	
 				end
 				else
+				// instruction==0--->write enable
 				begin
 					write_en <= 1;
 					read_en <= 0;	
@@ -338,6 +341,7 @@ begin
 		
 		WAIT_HANDSHAKE:
 		begin
+			//if master and slave are ready to data transaction, sampling of the first bit is done
 			if (master_valid==1 && slave_ready==1)
 			begin
 				count <= count+1;
@@ -357,6 +361,7 @@ begin
 				count2 <= count2+1;
 			end
 			
+			//if master and slave are not ready to data transaction, go back to wait_handshake state 
 			else
 			begin
 				count <= count;
@@ -377,13 +382,16 @@ begin
 			end
 		end
 		
+		//after hanshaking, transmitting addtess and data starts
 		TRANSMIT_BURST_ADDR_DATA:
 		begin
 			if (count >= DATA_LEN-1 && count >= ADDR_LEN-1 && count2 >= BURST_LEN-1)
 			begin
 				count <= 0;
+				//for write operation
 				if (instruction[0]==0)
 				begin
+					//if it is not a burst operation, go to finish state
 					if (burst_num==0)
 					begin
 						state <= FINISH;
@@ -391,12 +399,14 @@ begin
 						tx_done <= 1;
 					end
 					else
+					//if it is a burst operation, send the last bit of the burst number
 					begin
 						state <= FIRST_BIT_BURST;
 						temp_data <= temp_data+1;
 						tx_done <= 0;
 					end
 				end
+				//for read operation
 				else
 				begin
 					state <= READ_WAIT;
@@ -416,6 +426,7 @@ begin
 				count2 <= count2;
 			end
 			
+			//continue to send address and data(count<data_len-1)
 			else if (count < DATA_LEN-1 && count < ADDR_LEN-1 && count2 >= BURST_LEN-1)
 			begin
 				count <= count+1;
@@ -435,6 +446,7 @@ begin
 				count2 <= count2;
 			end
 			
+			//finishes sending data(count>data_len-1)
 			else if (count >= DATA_LEN-1 && count < ADDR_LEN-1 && count2 < BURST_LEN-1)
 			begin
 				count <= count+1;
@@ -454,6 +466,7 @@ begin
 				count2 <= count2+1;
 			end
 			
+			//no need of this state,always data_len<address_len
 			else if (count < DATA_LEN-1 && count >= ADDR_LEN-1 && count2 < BURST_LEN-1)
 			begin
 				count <= count+1;
@@ -473,6 +486,7 @@ begin
 				count2 <= count2+1;
 			end
 			
+			//no need of this state, since always burst_len>address_len
 			else if (count >= DATA_LEN-1 && count < ADDR_LEN-1 && count2 >= BURST_LEN-1)
 			begin
 				count <= count+1;
@@ -492,6 +506,7 @@ begin
 				count2 <= count2;
 			end
 			
+			//no need of this state, since always burst_len>address_len
 			else if (count < DATA_LEN-1 && count >= ADDR_LEN-1 && count2 >= BURST_LEN-1)
 			begin
 				count <= count+1;
