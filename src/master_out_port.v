@@ -426,7 +426,7 @@ begin
 				count2 <= count2;
 			end
 			
-			//continue to send address and data(count<data_len-1)
+			//no need of this state, always address_len>burst_len
 			else if (count < DATA_LEN-1 && count < ADDR_LEN-1 && count2 >= BURST_LEN-1)
 			begin
 				count <= count+1;
@@ -526,17 +526,22 @@ begin
 				count2 <= count2;
 			end
 			
+			//finshed reading data and address
 			else if (count >= DATA_LEN-1 && count >= ADDR_LEN-1 && count2 < BURST_LEN-1)
 			begin
 				count <= 0;
+				//check whether the instruction is to write
 				if (instruction[0]==0)
 				begin
+					//check whether it is burst operation
 					if (burst_num==0)
+					//if not only one data write, go to finish state
 					begin
 						state <= FINISH;
 						tx_done <= 1;
 						temp_data <= temp_data;
 					end
+					//if it is a burst write, goto next state to send the last bit of the burst address
 					else
 					begin
 						state <= TRANSMIT_BURST_FIRST_BIT;
@@ -544,14 +549,17 @@ begin
 						temp_data <= temp_data+1;
 					end
 				end
+				//if it is a read operation, 
 				else
 				begin
+					//if it is not a burst read command, go to read_wait state, transmission done
 					if (burst_num==0)
 					begin
 						state <= READ_WAIT;
 						tx_done <= 1;
 						temp_data <= temp_data;
 					end
+					//if it is a burst write, goto next state to send the last bit of the burst address
 					else
 					begin
 						state <= TRANSMIT_BURST_FIRST_BIT;
@@ -572,6 +580,7 @@ begin
 				count2 <= count2+1;
 			end
 			
+			//count<data_len, continus to transmit data, address and burst_num
 			else
 			begin
 				count <= count+1;
@@ -592,19 +601,24 @@ begin
 			end
 		end
 		
+		//no need of this state
 		TRANSMIT_ADDR_DATA:
 		begin
+			//receive all the data and address bits
 			if (count >= DATA_LEN-1 && count >= ADDR_LEN-1)
 			begin
 				count <= 0;
+				//if the instruction is to write 
 				if (instruction[0]==0)
 				begin
+					//if it is not a burst write, go to finish state
 					if (burst_num==0)
 					begin
 						state <= FINISH;
 						temp_data <= temp_data;
 						tx_done <= 1;
 					end
+					//else go to next state to send last bit of burst address
 					else
 					begin
 						state <= FIRST_BIT_BURST;
@@ -612,6 +626,7 @@ begin
 						tx_done <= 0;
 					end
 				end
+				//if it is a read instruction
 				else
 				begin
 					state <= READ_WAIT;
@@ -631,6 +646,7 @@ begin
 				count2 <= count2;
 			end
 			
+			//finished sending data bits
 			else if (count >= DATA_LEN-1 && count < ADDR_LEN-1)
 			begin
 				count <= count+1;
@@ -650,6 +666,8 @@ begin
 				count2 <= count2;
 			end
 			
+
+			//finished sending address
 			else if (count < DATA_LEN-1 && count >= ADDR_LEN-1)
 			begin
 				count <= count+1;
@@ -669,6 +687,7 @@ begin
 				count2 <= count2;
 			end
 			
+			//not finishing sending addresss and data
 			else
 			begin
 				count <= count+1;
@@ -689,19 +708,23 @@ begin
 			end
 		end
 		
+		//after finishing sending data, this state comes,send the remaining address bits
 		TRANSMIT_BURST_ADDR:
 		begin
+			//send first 12 bits of the burst address and address
 			if (count2 >= BURST_LEN-1 && count >= ADDR_LEN-1)
 			begin
 				count <= 0;
 				if (instruction[0]==0)
 				begin
+					//if it is not a burst write
 					if (burst_num==0)
 					begin
 						state <= FINISH;
 						temp_data <= temp_data;
 						tx_done <= 1;
 					end
+					//if it is a burst write
 					else
 					begin
 						state <= FIRST_BIT_BURST;
@@ -709,6 +732,7 @@ begin
 						tx_done <= 0;
 					end
 				end
+				//if it is a read command
 				else
 				begin
 					state <= READ_WAIT;
@@ -728,6 +752,7 @@ begin
 				count2 <= count2;
 			end
 			
+			//no use of this condition
 			else if (count2 >= BURST_LEN-1 && count < ADDR_LEN-1)
 			begin
 				count <= count+1;
@@ -747,11 +772,14 @@ begin
 				count2 <= count2;
 			end
 			
+			//send all the adreess 
 			else if (count2 < BURST_LEN-1 && count >= ADDR_LEN-1)
 			begin
 				count <= 0;
+				//if it is a write command
 				if (instruction[0]==0)
 				begin
+					//if it is not a burst operaton 
 					if (burst_num==0)
 					begin
 						state <= FINISH;
@@ -759,6 +787,7 @@ begin
 						tx_done <= 1;
 						
 					end
+					//if burst then send last bit of address
 					else
 					begin
 						state <= TRANSMIT_BURST_FIRST_BIT;
@@ -766,14 +795,17 @@ begin
 						tx_done <= 0;
 					end
 				end
+				//read command
 				else
 				begin
+					//if it is not a burst operaton 
 					if (burst_num==0)
 					begin
 						state <= READ_WAIT;
 						temp_data <= temp_data;
 						tx_done <= 1;
 					end
+					//if burst then send last bit of address
 					else
 					begin
 						state <= TRANSMIT_BURST_FIRST_BIT;
@@ -794,6 +826,7 @@ begin
 				count2 <= count2+1;
 			end
 			
+			//not completed sending address
 			else
 			begin
 				count <= count+1;
@@ -814,6 +847,8 @@ begin
 			end
 		end
 		
+
+		//no use of this state
 		TRANSMIT_BURST_DATA:
 		begin
 			if (count >= DATA_LEN-1 && count2 >= BURST_LEN-1)
@@ -936,6 +971,8 @@ begin
 			end
 		end
 		
+
+		//no use of this state
 		TRANSMIT_DATA:
 		begin
 			if (count >= DATA_LEN-1)
@@ -995,6 +1032,8 @@ begin
 			end
 		end
 		
+
+		//no use of this state
 		TRANSMIT_ADDR:
 		begin
 			if (count >= ADDR_LEN-1)
@@ -1054,16 +1093,20 @@ begin
 			end
 		end
 		
+		//if a burst operation, send the last bit of the address
 		TRANSMIT_BURST_FIRST_BIT:
 		begin
+			//received lst bit of the burst address
 			if (count2 >= BURST_LEN-1)
 			begin
 				count <= count+1;
+				//if write instruction
 				if (instruction[0]==0)
 				begin
 					state <= WAIT_HANDSHAKE_BURST;
 					tx_done <= 0;
 				end
+				//if read instruction
 				else
 				begin
 					state <= READ_WAIT;
@@ -1083,6 +1126,7 @@ begin
 				count2 <= count2;
 			end
 			
+			//if not received last bit
 			else
 			begin
 				count <= count;
@@ -1129,8 +1173,11 @@ begin
 			count2 <= count2;
 		end
 		
+
+		//wait for handshake of the master and slave, first bit of the next data send while sending the first bit of the burst address
 		WAIT_HANDSHAKE_BURST:
 		begin
+			//if handshake is done
 			if (master_valid==1 && slave_ready==1)
 			begin
 				count <= count+1;
@@ -1170,17 +1217,23 @@ begin
 			end
 		end
 		
+
+		//transmit all the burst data 
 		TRANSMIT_DATA_BURST:
 		begin
+			//if send all the data bits
 			if (count >= DATA_LEN-1)
 			begin
 				count <= 0;
+				//check whether there is more burst data to be send
 				if (burst_count >= burst_num)
+				//if no, then go to finish state
 				begin
 					state <= FINISH;
 					temp_data <= temp_data;
 					tx_done <= 1;
 				end
+				//otherwise go to send the first bit of the burst 
 				else
 				begin
 					state <= FIRST_BIT_BURST;
@@ -1220,11 +1273,14 @@ begin
 			end
 		end
 		
+		//reading 
 		READ_WAIT:
 		begin
 			count <= 0;
+			//if reading is finished go to idle state
 			if (rx_done == 1)
 				state <= IDLE;
+				//otherwise, stay in the read state
 			else
 				state <= READ_WAIT;
 			master_ready <= 1;
@@ -1242,6 +1298,7 @@ begin
 			count2 <= count2;
 		end
 		
+		//after finishing writing, come to this state, next state is idle
 		FINISH:
 		begin
 			count <= 0;
@@ -1261,6 +1318,7 @@ begin
 			count2 <= count2;
 		end
 		
+		//default case
 		default:
 		begin 
 			count <= 0;
