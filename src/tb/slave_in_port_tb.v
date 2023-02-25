@@ -40,9 +40,9 @@ module slave_in_port_tb();
     wire rx_done;
     wire slave_ready;
     
-    parameter [11:0] sent_addr=12'b01010101010;
+    parameter [11:0] sent_addr=12'b101010101010;
     parameter [7:0] sent_data=8'b01010101;
-    parameter [12:0] sent_burst=13'b0;
+    parameter [12:0] sent_burst=13'b1000000000011;
     integer  dc=0;
     integer ac=0;
 
@@ -107,6 +107,12 @@ module slave_in_port_tb();
                             rx_data<=sent_data[ac];
                         end
                 end
+        end
+        
+     @(posedge clk);
+        begin
+            master_valid<=1;
+            write_en<=1;
         end
     
    
