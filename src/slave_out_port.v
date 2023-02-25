@@ -119,7 +119,7 @@ module slave_out_port(
                                 DATA7:
                                     begin
                                     tx_data<=data_in[7];
-                                    tx_done<=1;
+                                    tx_done_reg<=1;
                                     CURRENT_STATE<=IDLE;
                                     DATA_STATE<=DATA0;
                                     end
