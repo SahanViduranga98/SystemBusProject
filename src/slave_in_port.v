@@ -43,7 +43,7 @@ module slave_in_port(
 
     reg [1:0] DATA_RECV_STATE=0;
     reg [2:0] ADDR_RECV_STATE=0;
-    reg [3:0] DATA_STATE=0;
+    reg [2:0] DATA_STATE=0;
     reg [3:0] ADDR_DATA_STATE=0;
     reg [1:0] DATA_ADDR_WAIT_STATE=0;
 
@@ -92,7 +92,7 @@ module slave_in_port(
     
     DATA_ADDR_WAIT0=0,
     DATA_ADDR_WAIT1=1,
-    DATA_ADDR_WAIT3=2;
+    DATA_ADDR_WAIT2=2;
     
     
     always @(posedge clk or posedge reset)
@@ -109,87 +109,84 @@ module slave_in_port(
             end
         else
             begin
-                case(DATA_RECV_STATE && write_en)
+                case(DATA_RECV_STATE)
                     DATA_IDLE:
                         begin
-                        if(hand_shake)
+                        if(hand_shake && write_en)
                             begin
-                                DATA_STATE<=DATA_RECEIVE;
+                                DATA_RECV_STATE<=DATA_RECEIVE;
                                 
                             end
                         else
                             begin
-                                DATA_STATE<=DATA_IDLE;
+                                DATA_RECV_STATE<=DATA_IDLE;
                             end
                         end
                     DATA_RECEIVE:
-                        begin
-                            if(DATA_STATE==DATA7)
-                                begin
-                                    if(burst[0]==0)
+ 
+                            begin
+                                case(DATA_STATE)
+                                    DATA0:
                                         begin
-                                            DATA_STATE<=DATA0;
-                                            DATA_STATE<=DATA_IDLE;
+                                        data_out[0]<=rx_data;
+                                        DATA_STATE<=DATA1;
                                         end
-                                    else
+                                    DATA1:
                                         begin
-                                            if(burst_counter==0)
-                                                DATA_STATE<=DATA_ADDR_WAIT;
-                                            else
-                                                DATA_STATE<=DATA_IDLE;
-                                            
+                                        data_out[1]<=rx_data;
+                                        DATA_STATE<=DATA2;
                                         end
-
-                                end
-                            else
-                                begin
-                                    case(DATA_STATE)
-                                        DATA0:
-                                            begin
-                                            data_out[0]<=rx_data;
-                                            DATA_STATE<=DATA1;
-                                            end
-                                        DATA1:
-                                            begin
-                                            data_out[1]<=rx_data;
-                                            DATA_STATE<=DATA2;
-                                            end
-                                        DATA2:
-                                            begin
-                                            data_out[2]<=rx_data;
-                                            DATA_STATE<=DATA3;
-                                            end
-                                        DATA3:
-                                            begin
-                                            data_out[3]<=rx_data;
-                                            DATA_STATE<=DATA4;
-                                            end
-                                        DATA4:
-                                            begin
-                                            data_out[4]<=rx_data;
-                                            DATA_STATE<=DATA5;
-                                            end
-                                        DATA5:
-                                            begin
-                                            data_out[5]<=rx_data;
-                                            DATA_STATE<=DATA6;
-                                            end
-                                        DATA6:
-                                            begin
-                                            data_out[6]<=rx_data;
-                                            DATA_STATE<=DATA7;
-                                            end
-                                        DATA7:
-                                            begin
+                                    DATA2:
+                                        begin
+                                        data_out[2]<=rx_data;
+                                        DATA_STATE<=DATA3;
+                                        end
+                                    DATA3:
+                                        begin
+                                        data_out[3]<=rx_data;
+                                        DATA_STATE<=DATA4;
+                                        end
+                                    DATA4:
+                                        begin
+                                        data_out[4]<=rx_data;
+                                        DATA_STATE<=DATA5;
+                                        end
+                                    DATA5:
+                                        begin
+                                        data_out[5]<=rx_data;
+                                        DATA_STATE<=DATA6;
+                                        end
+                                    DATA6:
+                                        begin
+                                        data_out[6]<=rx_data;
+                                        DATA_STATE<=DATA7;
+                                        end
+                                    DATA7:
+                                        begin
                                             data_out[7]<=rx_data;
-                                            end
-                                    endcase
-                                end
-                            
-                        end
+                                            
+                                            if(burst[0]==0)
+                                                begin
+                                                    DATA_STATE<=DATA0;
+                                                    DATA_RECV_STATE<=DATA_IDLE;
+                                                end
+                                            else
+                                                begin
+                                                    if(burst_counter==0)
+                                                        DATA_RECV_STATE<=DATA_ADDR_WAIT;
+                                                    else
+                                                        DATA_RECV_STATE<=DATA_IDLE;
+                                                    
+                                                end
+
+                                        
+                                        end
+                                endcase
+                            end        
+                        
                     DATA_ADDR_WAIT:
                         begin
-                            case DATA_ADDR_WAIT_STATE:
+                            case(DATA_ADDR_WAIT_STATE)
                                 DATA_ADDR_WAIT0:
                                     DATA_ADDR_WAIT_STATE<=DATA_ADDR_WAIT1;
                                 DATA_ADDR_WAIT1:
@@ -197,7 +194,8 @@ module slave_in_port(
                                 DATA_ADDR_WAIT2:
                                     begin
                                         DATA_ADDR_WAIT_STATE<=DATA_ADDR_WAIT0;
-                                        DATA_STATE<=DATA_IDLE;
+                                        DATA_RECV_STATE<=DATA_IDLE;
+                                        DATA_STATE<=DATA0;
                                     end
                             endcase
 
