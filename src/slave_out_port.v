@@ -28,14 +28,19 @@ module slave_out_port(
     input master_ready,
     input slave_valid,
     
-    output reg slave_ready,
+    output  slave_ready,
     output reg tx_data,
-    output reg tx_done
-    );
+    output tx_done);
     
     reg CURRENT_STATE=0;
     reg [3:0] DATA_STATE=0;
     
+    reg slave_ready_reg;
+    assign slave_ready=slave_ready_reg;
+
+    reg tx_done_reg;
+    assign tx_done=tx_done_reg;
+
     parameter 
     IDLE=0,
     TRANSMIT=1,
@@ -64,13 +69,13 @@ module slave_out_port(
                             if(master_ready && slave_valid)
                                 begin
                                 CURRENT_STATE<=TRANSMIT;
-                                slave_ready<=0;
-                                tx_done<=0;
+                                slave_ready_reg<=0;
+                                tx_done_reg<=0;
                                 end  
                             else
                                 begin
-                                slave_ready<=1;
-                                tx_done<=1;
+                                slave_ready_reg<=1;
+                                tx_done_reg<=1;
                                 end   
                         end
                     TRANSMIT:
@@ -94,7 +99,6 @@ module slave_out_port(
                                 DATA3:
                                     begin
                                     tx_data<=data_in[3];
-                                    tx_done<=0;
                                     DATA_STATE<=DATA4;
                                     end
                                 DATA4:
