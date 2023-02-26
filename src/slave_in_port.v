@@ -37,7 +37,7 @@ module slave_in_port(
     output reg[11:0] addr_out,
     output reg read_enable,
     
-    output reg[11:0] burst_counter=12'd0,
+    output reg[11:0] burst_counter,
     output rx_done,
     output slave_ready);
 
@@ -46,7 +46,7 @@ module slave_in_port(
     reg [2:0] DATA_STATE=0;
     reg [3:0] ADDR_DATA_STATE=0;
     reg [1:0] DATA_ADDR_WAIT_STATE=0;
-
+    reg ADDR_READ_BURST_WAIT_STATE=0;
     wire hand_shake = master_valid & slave_ready;
 
     reg rx_done_reg;
@@ -54,6 +54,9 @@ module slave_in_port(
 
     reg slave_ready_reg;
     assign slave_ready=slave_ready_reg;
+
+    reg addr_idle_reg=1;
+    reg [3:0] delay_counter=0;
 
     parameter
     DATA_IDLE = 0,
@@ -66,7 +69,8 @@ module slave_in_port(
     ADDR_WAIT_HANDSHAKE=3,
     ADDR_INC_BURST=4,
     ADDR_INTERRUPT=5,
-
+    ADDR_READ_BURST_HANDSHAKE=6,
+    
     ADDR_DATA0=0,
     ADDR_DATA1=1,
     ADDR_DATA2=2,
@@ -92,7 +96,10 @@ module slave_in_port(
     
     DATA_ADDR_WAIT0=0,
     DATA_ADDR_WAIT1=1,
-    DATA_ADDR_WAIT2=2;
+    DATA_ADDR_WAIT2=2,
+    
+    ADDR_READ_BURST_WAIT0=0,
+    ADDR_READ_BURST_WAIT1=1;
     
     
     always @(posedge clk or posedge reset)
@@ -106,6 +113,8 @@ module slave_in_port(
                 ADDR_DATA_STATE<=ADDR_DATA0;
 
                 slave_ready_reg<=0;
+                addr_idle_reg<=1;
+
             end
         else
             begin
@@ -164,7 +173,7 @@ module slave_in_port(
                                     DATA7:
                                         begin
                                             data_out[7]<=rx_data;
-                                            
+                                            DATA_STATE<=DATA0;
                                             if(burst[0]==0)
                                                 begin
                                                     DATA_STATE<=DATA0;
@@ -175,8 +184,10 @@ module slave_in_port(
                                                     if(burst_counter==0)
                                                         DATA_RECV_STATE<=DATA_ADDR_WAIT;
                                                     else
-                                                        DATA_RECV_STATE<=DATA_IDLE;
-                                                    
+                                                        begin
+                                                            DATA_RECV_STATE<=DATA_IDLE;
+                                                           
+                                                        end
                                                 end
 
                                         
@@ -210,12 +221,14 @@ module slave_in_port(
                             begin
                                 ADDR_RECV_STATE<=ADDR_RECEIVE;
                                 rx_done_reg <= 0;
-                                burst_counter<=0;
+                                burst_counter<=12'd0;
+                                addr_idle_reg<=0;
                             end
                         else
                             begin
                                 ADDR_RECV_STATE<=ADDR_IDLE;
                                 burst_counter<=burst_counter;
+                                addr_idle_reg<=1;
                             end
                         end
 
@@ -291,7 +304,10 @@ module slave_in_port(
                         if(burst[0] && hand_shake )
                             ADDR_RECV_STATE<=ADDR_INC_BURST; 
                         else if(burst[0] && ~hand_shake)
-                            ADDR_RECV_STATE<=ADDR_WAIT_HANDSHAKE;
+                            begin
+                                ADDR_RECV_STATE<=ADDR_WAIT_HANDSHAKE;
+                                addr_idle_reg<=1;
+                            end
                         else
                             begin
                                 ADDR_RECV_STATE<=ADDR_IDLE;
@@ -304,30 +320,70 @@ module slave_in_port(
                             if(hand_shake)
                                 begin
                                     ADDR_RECV_STATE<=ADDR_INC_BURST;
+                                    addr_idle_reg<=1;
+                                    rx_done_reg<=0;
                                 end
-                            
+                            else if(rx_done_reg==1 && read_en==1)
+                                begin
+                                    ADDR_RECV_STATE<=ADDR_READ_BURST_HANDSHAKE;
+                                    rx_done_reg<=0;
+                                end
                             else
                                 begin
                                     ADDR_RECV_STATE<=ADDR_WAIT_HANDSHAKE;
+                                    rx_done_reg<=0;
                                 end
                         end
-                    ADDR_INC_BURST:
+                    ADDR_READ_BURST_HANDSHAKE:
                         begin
-                            if(read_en==0 || master_valid==0)
+                            if(ADDR_READ_BURST_WAIT_STATE==ADDR_READ_BURST_WAIT1 && master_ready==0 && (burst_counter%8==0))
                                 begin
-                                    ADDR_RECV_STATE<=ADDR_INTERRUPT;
+                                    ADDR_RECV_STATE<=ADDR_RECV_STATE;
+                                end
+                            else
+                                begin
+                                    case(ADDR_READ_BURST_WAIT_STATE)
+                                        ADDR_READ_BURST_WAIT0:
+                                            begin
+                                                ADDR_RECV_STATE<=ADDR_RECV_STATE;
+                                                ADDR_READ_BURST_WAIT_STATE<=ADDR_READ_BURST_WAIT1;
+                                            end
+                                        ADDR_READ_BURST_WAIT1:
+                                            begin
+                                                ADDR_RECV_STATE<=ADDR_INC_BURST;
+                                                ADDR_READ_BURST_WAIT_STATE<=ADDR_READ_BURST_WAIT0;
+                                            end
+                                    endcase
+                                    addr_idle_reg<=1;
+                                    rx_done_reg<=0;
+                                end
+                        end
+                    ADDR_INC_BURST://4
+                        begin
+                            if(delay_counter<4'd7)
+                                begin
+                                    ADDR_RECV_STATE<=ADDR_RECV_STATE;
+                                    delay_counter<=delay_counter+4'd1;
+                                    addr_idle_reg<=1;
+                                    rx_done_reg<=0;
                                 end
                             else
                                 begin
                                     if(burst_counter<burst[12:1])
                                         begin
+                                            delay_counter<=0;
+                                            addr_idle_reg<=1;
+                                            rx_done_reg<=1;
                                             addr_out<=addr_out+12'b1;
-                                            burst_counter<=burst_counter+1;
+                                            burst_counter<=burst_counter+12'd1;
                                         end
                                     else
                                         begin
+                                            delay_counter<=0;
+                                            addr_idle_reg<=1;
+                                            rx_done_reg<=1;
                                             addr_out<=addr_out+12'b1;
-                                            burst_counter<=burst_counter+1;
+                                            burst_counter<=burst_counter+12'd1;
                                             ADDR_RECV_STATE<=ADDR_IDLE;
                                         end
 
@@ -339,7 +395,7 @@ module slave_in_port(
                         end  
                 endcase
 
-                if(ADDR_RECV_STATE==ADDR_IDLE && DATA_RECV_STATE==DATA_IDLE)
+                if(DATA_RECV_STATE==DATA_IDLE && addr_idle_reg==1)
                     slave_ready_reg<=1;
                 else
                     slave_ready_reg<=0;
@@ -349,8 +405,5 @@ module slave_in_port(
         
     end
             
-                
-        
-        
-    
+
 endmodule
