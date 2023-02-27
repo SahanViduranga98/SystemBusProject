@@ -65,6 +65,9 @@ end
 		#20 rst <= 0; m1_request <= 1; m2_request <= 1; m1_slave_sel <= 2'b01; m2_slave_sel <= 2'b10; // Master 1 & 2 request1
 		
 		#20 rst <= 0; m1_request <= 0; m2_request <= 1; m1_slave_sel <= 2'b00; m2_slave_sel <= 2'b11;// Master 2 priority request
+		
+		#20 rst <= 0; m1_request <= 0; m2_request <= 1; m1_slave_sel <= 2'b00; m2_slave_sel <= 2'b11;// Master 2 priority request
+		#5 rst <= 0; m1_request <= 1; m2_request <= 0; m1_slave_sel <= 2'b10; 
 
         #20 rst = 1;
 	end
