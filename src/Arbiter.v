@@ -1,12 +1,10 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
+
 // Create Date: 01/20/2023 07:51:33 PM
-// Design Name: 
+// Designer Name: Isuru Munasinghe
 // Module Name: Arbiter
-// Project Name: 
+// Project Name: System Bus Design
 // Target Devices: 
 // Tool Versions: 
 // Description: 
@@ -52,7 +50,7 @@ begin
             m2_grant <= 0;
             arbiter_busy <= 0;
             bus_grant <= 2'b00;
-            slave_sel  <= 2'b00; 
+            slave_sel <= 2'b00; 
         end
     // if master 1 request it since it is the highest priority master,
     // make the next state as MASTER1_REQUEST_STATE
@@ -62,19 +60,19 @@ begin
             m2_grant <= 0;
             arbiter_busy <= 1;
             bus_grant <= 2'b01;
-            slave_sel  <= 2'b00;
+            slave_sel  <= m1_slave_sel;
             state <= MASTER1_SLAVE_SELECT_STATE;
          end
          
     // if master 2 request and master 1 is not acquiring the bus and arbiter is not busy
     // make the next state as MASTER2_REQUEST_STATE      
-    else if((m2_request == 1) && (state != MASTER1_SLAVE_SELECT_STATE) && (arbiter_busy != 1))
+    else if((m2_request == 1) && (arbiter_busy != 1) && bus_grant!= 2'b01)
         begin
             m1_grant <= 0;
             m2_grant <= 1;
             arbiter_busy <= 1;
             bus_grant <= 2'b10;
-            slave_sel  <= 2'b00;
+            slave_sel  <= m2_slave_sel;
             state <= MASTER2_SLAVE_SELECT_STATE;
         end
      else
@@ -95,19 +93,24 @@ always @(posedge clk)
         MASTER1_SLAVE_SELECT_STATE:
             begin
                 slave_sel <= m1_slave_sel;
+                bus_grant <= 2'b01;
                 state<=IDLE_STATE;
             end
              
         MASTER2_SLAVE_SELECT_STATE:
             begin
-                slave_sel <= m2_slave_sel; 
+                slave_sel <= m2_slave_sel;
+                bus_grant <= 2'b10; 
                 state<=IDLE_STATE;
             end
               
         IDLE_STATE:
              begin
-                slave_sel <= 2'b0;
-                arbiter_busy <= 0;      
+                m1_grant <= 0;
+                m2_grant <= 0;
+                arbiter_busy <= 0;
+                bus_grant <= 2'b00;
+                slave_sel <= 2'b00;      
              end
              
         endcase
