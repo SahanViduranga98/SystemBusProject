@@ -33,16 +33,15 @@ module bram_4096_tb();
     
 	
 	
-	bram_4096 BRAM_4096(
-	   .clka(clk),
-	   .rsta(reset),
-	   .ena(r_en),
-	   .wea(w_en),
-	   .addra(addr),
-	   .dina(d_in),
-	   .douta(d_out),
-	   .rsta_busy(reset_busy)
-	);
+	bram bram_wrapper
+           (.BRAM_PORTA_0_addr(addr),
+            .BRAM_PORTA_0_clk(clk),
+            .BRAM_PORTA_0_din(d_in),
+            .BRAM_PORTA_0_dout(d_out),
+            .BRAM_PORTA_0_en(r_en),
+            .BRAM_PORTA_0_rst(reset),
+            .BRAM_PORTA_0_we(w_en),
+            .rsta_busy_0(reset_busy));
 	parameter CLK_PERIOD=10;
 	initial begin 
             clk=0;
