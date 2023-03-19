@@ -1,14 +1,3 @@
-/* 
- file name : Bus_mux.v
- Description:
-	The multiplexer to maintain communication between master and slave
-	
- Maintainers : Sanjula Thiranjaya <sthiranjaya@gmail.com>
-					Sachini Wickramasinghe <sswickramasinghe@gmail.com>
-					Kavish Ranawella <kavishranawella@gmail.com>
-					
- Revision : v1.0 
-*/
 
 module Bus_mux(
 
