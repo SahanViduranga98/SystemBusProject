@@ -35,7 +35,7 @@ module slave(
 	output slave_valid,
 	output slave_ready,
 
-	input rx_address,
+	input rx_addr,
 	input rx_data,
 	input rx_burst,
 
@@ -62,7 +62,7 @@ module slave(
         .master_valid(master_valid),
         .slave_valid(slave_valid),
         .slave_ready(slave_ready),
-        .rx_address(rx_address),
+        .rx_addr(rx_addr),
         .rx_data(rx_data),
         .rx_burst(rx_burst),
         // .slave_tx_done(slave_tx_done),

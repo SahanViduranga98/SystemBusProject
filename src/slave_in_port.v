@@ -20,56 +20,84 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module slave_in_port (
-	input clk, 
-	input reset,
-	input rx_address,
-	input rx_data,
-	input master_valid,
-	input read_en,
-	input write_en,
-	input slave_valid,
-	input master_ready,
-	input [12:0]burst,
-	output slave_ready,
-	output reg rx_done,
-	output reg[11:0]address = 12'b0,
-	output reg[7:0]data = 8'b0,
-	output reg read_en_in1 = 0,
-	output reg write_en_in1 = 0,
-	output read_en_in,
-	output write_en_in,
-	output reg[11:0] burst_counter = 12'd0,
-	output reg[3:0] addr_counter = 4'd0);
-	
+module slave_in_port(
+    input clk,
+    input reset,
+    
+    input rx_data,
+    input rx_addr,
+    
+    input master_ready,
+    input master_valid,
+    input [12:0] burst,
+    input read_en,
+    input write_en,
+    
+    output reg[7:0] data_out,
+    output reg[11:0] addr_out,
+    output reg read_enable,
+    
+    output reg[11:0] burst_counter,
+    output rx_done,
+    output slave_ready);
 
-    reg [3:0]addr_state = 4'd13;
-    reg [3:0]data_state = 4'd13;
-    reg addr_idle = 1;
-    reg data_idle = 1;
-    // reg [3:0]addr_counter = 4'd0;
-    reg [3:0]data_counter = 4'd0;
-    
-    wire handshake = master_valid & slave_ready;
-    
-    assign slave_ready = data_idle & addr_idle;
-    assign read_en_in  = rx_done & read_en_in1;
-    assign write_en_in = rx_done & write_en_in1;
-    
-    parameter 
-    IDLE                = 13, 
-    ADDR_RECIEVE        = 1,
-    ADDR_INC_BURST      = 2, 
-    DATA_RECIEVE 	    = 3,
-    DATA_BURST_GAP      = 4,
-    DATA_RECIEVE_BURST  = 5,
-    ADDR_WAIT_HANDSHAKE = 6,
-    READ_BURST_WAIT_HANDSHAKE = 7;
+    reg [1:0] DATA_RECV_STATE=0;
+    reg [2:0] ADDR_RECV_STATE=0;
+    reg [2:0] DATA_STATE=0;
+    reg [3:0] ADDR_DATA_STATE=0;
+    reg [1:0] DATA_ADDR_WAIT_STATE=0;
+    reg ADDR_READ_BURST_WAIT_STATE=0;
+    wire hand_shake = master_valid & slave_ready;
 
+    reg rx_done_reg;
+    assign rx_done=rx_done_reg;
+
+    reg slave_ready_reg;
+    assign slave_ready=slave_ready_reg;
+
+    reg addr_idle_reg=1;
+    reg [3:0] delay_counter=0;
+
+    parameter
+    DATA_IDLE = 0,
+    DATA_RECEIVE = 1,
+    DATA_ADDR_WAIT = 2,
+	ADDR_IDLE=0,
+    ADDR_RECEIVE=1,
+    ADDR_BURST_CHECK=2,
+    ADDR_WAIT_HANDSHAKE=3,
+    ADDR_INC_BURST=4,
+    ADDR_INTERRUPT=5,
+    ADDR_READ_BURST_HANDSHAKE=6,
+    ADDR_DATA0=0,
+       ADDR_DATA1=1,
+       ADDR_DATA2=2,
+       ADDR_DATA3=3,
+       ADDR_DATA4=4,
+       ADDR_DATA5=5,
+       ADDR_DATA6=6,
+       ADDR_DATA7=7,
+       ADDR_DATA8=8,
+       ADDR_DATA9=9,
+       ADDR_DATA10=10,
+       ADDR_DATA11=11,
+   
+   
+       DATA0=0,
+       DATA1=1,
+       DATA2=2,
+       DATA3=3,
+       DATA4=4,
+       DATA5=5,
+       DATA6=6,
+       DATA7=7,
+        DATA_ADDR_WAIT0=0,
+        DATA_ADDR_WAIT1=1,
+        DATA_ADDR_WAIT2=2,
+    ADDR_READ_BURST_WAIT0=0,
+          ADDR_READ_BURST_WAIT1=1;
     
-    
-    // Statemachine to capture the 12 bit address
-    always @ (posedge clk or posedge reset) 
+    always @(posedge clk or posedge reset)
     begin
         if (reset)
         begin
@@ -90,7 +118,7 @@ module slave_in_port (
                         begin
                             addr_state            <= ADDR_RECIEVE;
                             addr_counter          <= addr_counter + 4'd1;
-                            address[addr_counter] <= rx_address;
+                            address[addr_counter] <= rx_addr;
                             addr_idle             <= 0;
                             rx_done               <= 0;
                             read_en_in1               <= read_en;
@@ -114,7 +142,7 @@ module slave_in_port (
                     begin
                         addr_state            <= addr_state;
                         addr_counter          <= addr_counter + 4'd1;
-                        address[addr_counter] <= rx_address;
+                        address[addr_counter] <= rx_addr;
                         addr_idle             <= 0;
                         rx_done               <= 0;
                     end
@@ -124,7 +152,7 @@ module slave_in_port (
                         else if ((burst[0] == 1) && handshake == 0)   addr_state <= ADDR_WAIT_HANDSHAKE; 
                         else                                                      addr_state <= IDLE;
                         addr_counter          <= 0;
-                        address[addr_counter] <= rx_address;
+                        address[addr_counter] <= rx_addr;
                         addr_idle             <= 1;
                         rx_done               <= 1;
                         burst_counter           <= burst_counter + 1;

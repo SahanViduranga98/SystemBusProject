@@ -36,7 +36,7 @@ module slave_port(
 	output reg slave_valid,
 	output slave_ready,
 
-	input rx_address,
+	input rx_addr,
 	input rx_data,
 	input rx_burst,
 	output tx_data,
@@ -82,7 +82,7 @@ slave_in_port SLAVE_IN_PORT(
 	.reset(reset),
 	
 	.rx_data(rx_data),
-	.rx_addr(rx_address),
+	.rx_addr(rx_addr),
 	
 	.master_ready(master_ready),
 	.master_valid(master_valid),
