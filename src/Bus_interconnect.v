@@ -73,10 +73,6 @@ output s3_read_en,
 input s3_slave_valid,
 input s3_slave_ready,
 
-input s1_slave_split_en,
-input s2_slave_split_en,
-input s3_slave_split_en,
-
 input m1_tx_burst_num,
 input m2_tx_burst_num,
 output s1_rx_burst_num,
