@@ -88,16 +88,13 @@ wire [1:0] bus_grant;
 wire [1:0] slave_sel;  
 
 Arbiter Bus_Arbiter1(
-.sys_clk(sys_clk), 
-.sys_rst(sys_rst),
+.clk(sys_clk), 
+.rst(sys_rst),
 .m1_request (m1_request), 
 .m2_request(m2_request),
 .m1_slave_sel(m1_slave_sel),
 .m2_slave_sel(m2_slave_sel),
 .trans_done(trans_done),
-.s1_slave_split_en(s1_slave_split_en),
-.s2_slave_split_en(s2_slave_split_en),
-.s3_slave_split_en(s3_slave_split_en),
 .m1_grant(m1_grant),
 .m2_grant(m2_grant),
 .arbiter_busy(arbiter_busy),
