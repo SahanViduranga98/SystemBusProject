@@ -164,65 +164,40 @@ assign button2 = ~button2_raw;
 assign button3 = ~button3_raw;
 
 scaledclock #(.maxcount(MAX_COUNT_CLK)) CLK_DIV(.inclk(clock), .ena(enable), .clk(clk));
-
-`ifndef TESTBENCH
-		
-	LCD_in LCD(
-		.clock(clock),
-		.rst(rst),
-		.m1_start(m1_busy&((~arbiter_busy)||(~bus_busy))),
-		.m2_start(m2_busy&((~arbiter_busy)||(~bus_busy))),
-		.address1(address1),
-		.data1(data1),
-		.address2(address2),
-		.data2(data2),
-		.config_state(config_state),
-		.mode_switch(mode_switch),
-		.LCD_ON(LCD_ON),	
-		.LCD_BLON(LCD_BLON),	
-		.LCD_RW(LCD_RW),	
-		.LCD_EN(LCD_EN),	
-		.LCD_RS(LCD_RS),	
-		.LCD_DATA(LCD_DATA));
 	
-`endif
+//command_processor #(.SLAVE_LEN(SLAVE_LEN), .ADDR_LEN(ADDR_LEN), .DATA_LEN(DATA_LEN), .BURST_LEN(BURST_LEN)) COMMAND(
+//	.clk(clk), 
+//	.reset(reset),
+//	.button1(button1),
+//	.button2(button2),
+//	.button3(button3),
+//	.switch_array(switch_array),
+//	.mode_switch(mode_switch),
+//	.rw_switch1(rw_switch1),
+//	.rw_switch2(rw_switch2),
+//	.display1_pin(display1_pin),
+//	.display2_pin(display2_pin),
+//	.display3_pin(display3_pin),
+//	.display4_pin(display4_pin),
+//	.display_val4(config_state),
 
-	
-command_processor #(.SLAVE_LEN(SLAVE_LEN), .ADDR_LEN(ADDR_LEN), .DATA_LEN(DATA_LEN), .BURST_LEN(BURST_LEN)) COMMAND(
-	.clk(clk), 
-	.reset(reset),
-	.button1(button1),
-	.button2(button2),
-	.button3(button3),
-	.switch_array(switch_array),
-	.mode_switch(mode_switch),
-	.rw_switch1(rw_switch1),
-	.rw_switch2(rw_switch2),
-	.display1_pin(display1_pin),
-	.display2_pin(display2_pin),
-	.display3_pin(display3_pin),
-	.display4_pin(display4_pin),
-	.display_val4(config_state),
+//	.read1(read1),
+//	.write1(write1),
+//	.data1(data1),
+//	.address1(address1),
+//	.slave1(slave1),
+//	.burst_num1(burst_num1),
+//	.read2(read2),
+//	.write2(write2),
+//	.data2(data2),
+//	.address2(address2),
+//	.slave2(slave2),
+//	.burst_num2(burst_num2));
 
-	.read1(read1),
-	.write1(write1),
-	.data1(data1),
-	.address1(address1),
-	.slave1(slave1),
-	.burst_num1(burst_num1),
-	.read2(read2),
-	.write2(write2),
-	.data2(data2),
-	.address2(address2),
-	.slave2(slave2),
-	.burst_num2(burst_num2));
-
-master_module #(.SLAVE_LEN(SLAVE_LEN), .ADDR_LEN(ADDR_LEN), .DATA_LEN(DATA_LEN), .BURST_LEN(BURST_LEN)) MASTER1(
+master #(.SLAVE_LEN(SLAVE_LEN), .ADDR_LEN(ADDR_LEN), .DATA_LEN(DATA_LEN), .BURST_LEN(BURST_LEN)) MASTER1(
 	.clk(clk), 
 	.reset(reset),
 	.busy(m1_busy),
-	.display1_pin(display5_pin),
-	.display2_pin(display6_pin),
 	
 	.read(read1),
 	.write(write1),
@@ -250,12 +225,10 @@ master_module #(.SLAVE_LEN(SLAVE_LEN), .ADDR_LEN(ADDR_LEN), .DATA_LEN(DATA_LEN),
 	.write_en(m1_write_en),
 	.read_en(m1_read_en));
 
-master_module #(.SLAVE_LEN(SLAVE_LEN), .ADDR_LEN(ADDR_LEN), .DATA_LEN(DATA_LEN), .BURST_LEN(BURST_LEN)) MASTER2(
+master #(.SLAVE_LEN(SLAVE_LEN), .ADDR_LEN(ADDR_LEN), .DATA_LEN(DATA_LEN), .BURST_LEN(BURST_LEN)) MASTER2(
 	.clk(clk), 
 	.reset(reset),
 	.busy(m2_busy),
-	.display1_pin(display7_pin),
-	.display2_pin(display8_pin),
 	
 	.read(read2),
 	.write(write2),
@@ -357,6 +330,7 @@ Bus_interconnect BUS(
 	.s3_slave_valid(s3_slave_valid),
 	.s3_slave_ready(s3_slave_ready),
 	
+
 	.m1_tx_burst_num(m1_tx_burst_num),
 	.m2_tx_burst_num(m2_tx_burst_num),
 
@@ -364,11 +338,11 @@ Bus_interconnect BUS(
 	.s2_rx_burst_num(s2_rx_burst_num),
 	.s3_rx_burst_num(s3_rx_burst_num));
 
-slave_4k SLAVE_4K(
+slave SLAVE_1(
 	.clk(clk), 
 	.reset(reset),
 
-	.slave_delay(6'd0),
+	//.slave_delay(6'd0),
 
 	.read_en(s1_read_en),
 	.write_en(s1_write_en),
@@ -379,16 +353,16 @@ slave_4k SLAVE_4K(
 	.slave_valid(s1_slave_valid),//need port -----> INCLUDED
 	.slave_ready(s1_slave_ready),
 
-	.rx_address(s1_rx_address),
+	.rx_addr(s1_rx_address),
 	.rx_data(s1_rx_data),
 	.rx_burst(s1_rx_burst_num),
 	.tx_data(s1_tx_data));
 
-slave_4k SLAVE_2K1(
+slave SLAVE_2(
 	.clk(clk), 
 	.reset(reset),
 
-	.slave_delay(6'd0),	
+	//.slave_delay(6'd0),	
 
 	.read_en(s2_read_en),
 	.write_en(s2_write_en),
@@ -399,16 +373,16 @@ slave_4k SLAVE_2K1(
 	.slave_valid(s2_slave_valid),//need port -----> INCLUDED
 	.slave_ready(s2_slave_ready),
 
-	.rx_address(s2_rx_address),
+	.rx_addr(s2_rx_address),
 	.rx_data(s2_rx_data),
 	.rx_burst(s2_rx_burst_num),				
 	.tx_data(s2_tx_data));
 
-slave_4k SLAVE_2K2(
+slave SLAVE_3(
 	.clk(clk), 
 	.reset(reset),
 
-	.slave_delay(6'd10),
+	//.slave_delay(6'd10),
 
 	.read_en(s3_read_en),
 	.write_en(s3_write_en),
@@ -419,7 +393,7 @@ slave_4k SLAVE_2K2(
 	.slave_valid(s3_slave_valid),//need port -----> INCLUDED
 	.slave_ready(s3_slave_ready),
 
-	.rx_address(s3_rx_address),
+	.rx_addr(s3_rx_address),
 	.rx_data(s3_rx_data),	
 	.rx_burst(s3_rx_burst_num),				
 	.tx_data(s3_tx_data));
