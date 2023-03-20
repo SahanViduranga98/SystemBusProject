@@ -1,104 +1,111 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 01/21/2023 09:46:02 AM
-// Design Name: 
-// Module Name: slave_out_port
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-
 module slave_out_port (
 	input clk, 
 	input reset,
+    
+    input[7:0] data_in,
 	input master_ready,
-	input [7:0]datain,
 	input slave_valid,
+    
 	output slave_ready,
-	output reg slave_tx_done,
-	output reg tx_data);
-
-    reg [3:0]data_state = 0;
-    reg data_idle;
+    output reg tx_data,
+    output tx_done);
     
-    wire handshake = slave_valid & master_ready;
+    reg CURRENT_STATE=0;
+    reg [3:0] DATA_STATE=0;
     
+    reg slave_ready_reg;
+    assign slave_ready=slave_ready_reg;
     
-    assign slave_ready = data_idle;
+    reg tx_done_reg;
+    assign tx_done=tx_done_reg;
     
     parameter 
-    IDLE  = 4'd13,
-    DATA_TRANSMIT = 4'd1,
-    DATA_TRANSMIT_BURST = 4'd2;
-    
-    reg [3:0]data_counter = 4'd0;
+    IDLE=0,
+    TRANSMIT=1,
+    DATA0=0,
+    DATA1=1,
+    DATA2=2,
+    DATA3=3,
+    DATA4=4,
+    DATA5=5,
+    DATA6=6,
+    DATA7=7;
     
     
     always @ (posedge clk or posedge reset) 
     begin
         if (reset)
-            data_state <= IDLE;
+            begin
+                CURRENT_STATE<=IDLE;
+                DATA_STATE<=DATA0;
+            end
         else
         begin 
-            case (data_state)
+                case(CURRENT_STATE)
                 IDLE:
                 begin
-                    if (handshake == 1)
+                            if(master_ready && slave_valid)
                     begin
-                        data_state <= DATA_TRANSMIT;
-                        tx_data <= datain[1];
-                        data_counter <= data_counter + 4'd2;
-                        data_idle <= 0;
-                        slave_tx_done <= 0;
+                                CURRENT_STATE<=TRANSMIT;
+                                slave_ready_reg<=0;
+                                tx_done_reg<=0;
                     end
                     else
                     begin 
-                        data_state <= IDLE;
-                        tx_data <= datain[data_counter];
-                        data_counter <= 0;
-                        data_idle <= 1;
-                        slave_tx_done <= 0;
+                                slave_ready_reg<=1;
+                                tx_done_reg<=1;
                     end
                 end
-                DATA_TRANSMIT:
+                    TRANSMIT:
+                        begin
+                            case(DATA_STATE)
+                                DATA0:
                 begin 
-                    if (data_counter < 4'd7)
+                                    tx_data<=data_in[0];
+                                    DATA_STATE<=DATA1;
+                                    end
+                                DATA1:
+                                    begin
+                                    tx_data<=data_in[1];
+                                    DATA_STATE<=DATA2;
+                                    end
+                                DATA2:
                         begin
-                            data_state <= data_state;
-                            tx_data <= datain[data_counter];
-                            data_counter <= data_counter + 4'd1;
-                            data_idle <= 0;
-                            slave_tx_done <= 0;
+                                    tx_data<=data_in[2];
+                                    DATA_STATE<=DATA3;
                         end
-                    else 
+                                DATA3:
                         begin
-                            data_state <= IDLE;
-                            tx_data <= datain[data_counter];
-                            data_counter <= 0;
-                            data_idle <= 0;	
-                            slave_tx_done <= 1;				
+                                    tx_data<=data_in[3];
+                                    DATA_STATE<=DATA4;
                         end
+                                DATA4:
+                                    begin
+                                    tx_data<=data_in[4];
+                                    DATA_STATE<=DATA5;
                 end 
-                default:
+                                DATA5:
                     begin
-                        tx_data <= 0;
-                        data_state <= IDLE;
+                                    tx_data<=data_in[5];
+                                    DATA_STATE<=DATA6;
                     end
-            endcase
+                                DATA6:
+                                    begin
+                                    tx_data<=data_in[6];
+                                    DATA_STATE<=DATA7;
         end
+                                DATA7:
+                                    begin
+                                    tx_data<=data_in[7];
+                                    tx_done_reg<=1;
+                                    CURRENT_STATE<=IDLE;
+                                    DATA_STATE<=DATA0;
     end
 
+                            endcase
+                        end
 
+                endcase
+            end
+    end
 endmodule
