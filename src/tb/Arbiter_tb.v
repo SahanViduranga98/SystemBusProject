@@ -28,6 +28,7 @@ reg m1_request = 0;
 reg m2_request = 0;
 reg [1:0] m1_slave_sel;
 reg [1:0] m2_slave_sel;
+reg trans_done;
 
 wire m1_grant;
 wire m2_grant;
@@ -46,7 +47,8 @@ Arbiter Arbiter(
 .m2_grant(m2_grant),
 .arbiter_busy(arbiter_busy),
 .bus_grant(bus_grant), 
-.slave_sel(slave_sel)
+.slave_sel(slave_sel),
+.trans_done(trans_done)
 );
 
 initial begin
@@ -58,18 +60,24 @@ initial begin
 end
 	 
 	initial begin
-		#10 rst <= 1;
+		#30 rst <= 1;
 		
-        #20 rst <= 0; m1_request <= 1; m2_request <= 0; m1_slave_sel <= 2'b10; m2_slave_sel <= 2'b00; // Master 1 request
+		//#30 rst <= 0; trans_done<=0; m1_request <= 0; m2_request <= 1; m1_slave_sel <= 2'b00; m2_slave_sel <= 2'b11;// Master 2 priority request
 		
-		#20 rst <= 0; m1_request <= 1; m2_request <= 1; m1_slave_sel <= 2'b01; m2_slave_sel <= 2'b10; // Master 1 & 2 request1
+       #30 rst <= 0; trans_done<=0; m1_request <= 1; m2_request <= 0; m1_slave_sel <= 2'd2; m2_slave_sel <= 2'd0; // Master 1 request
 		
-		#20 rst <= 0; m1_request <= 0; m2_request <= 1; m1_slave_sel <= 2'b00; m2_slave_sel <= 2'b11;// Master 2 priority request
+		//#30 rst <= 0; trans_done<=0; m1_request <= 1; m2_request <= 1; m1_slave_sel <= 2'b01; m2_slave_sel <= 2'b10; // Master 1 & 2 request1
 		
-		#20 rst <= 0; m1_request <= 0; m2_request <= 1; m1_slave_sel <= 2'b00; m2_slave_sel <= 2'b11;// Master 2 priority request
-		#5 rst <= 0; m1_request <= 1; m2_request <= 0; m1_slave_sel <= 2'b10; 
+		//#20 rst <= 0;trans_done<=0;  m1_request <= 0; m2_request <= 1; m1_slave_sel <= 2'b00; m2_slave_sel <= 2'b11;// Master 2 priority request
+		
+		
+		//#20 rst <= 0; m1_request <= 0; m2_request <= 1; m1_slave_sel <= 2'b00; m2_slave_sel <= 2'b10;// Master 2 priority request
+		
+		//#1 rst <= 0; m1_request <= 1; m1_slave_sel <= 2'b10; 
+		
+		//#5 rst <= 0; m1_request <= 0; m2_request <= 1; m2_slave_sel <= 2'b10; 
 
-        #20 rst = 1;
+        //#20 rst = 1;
 	end
 
 
