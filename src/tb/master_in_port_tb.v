@@ -38,6 +38,111 @@ module master_in_port_tb();
     forever #(CLK_PERIOD/2) clk <= ~clk;
     end
 
-	
+    initial begin
+    $display($time ,"Starting time of simulation");
 
-endmodule 
+    reset<=0;
+    #30
+    reset<=1;
+
+    #30                        //Normal Read operation
+    reset<=0;
+    instruction <= 2'b11;
+    burst_num <= 11'd0;
+    tx_done<= 1 ;
+
+    //approval_grant <= 1 ;
+    #30
+    slave_valid<=1;
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+    
+    #30
+    reset <= 1;
+
+    #30
+    reset <= 0;
+    instruction <= 2'b11;
+    slave_valid<=0;
+
+    #30                     //Burst Operation 
+    instruction <= 2'b11;
+    burst_num <= 11'd3;
+    //
+
+    #30
+    slave_valid<=1;
+    tx_done<= 1 ;
+    //approval_grant <= 1 ;
+
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=0;
+
+    #10
+    rx_data<=0;
+    #10
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+    
+    #10
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=0;
+    #10
+    rx_data<=1;
+    #10
+    rx_data<=1;
+
+    #30
+    reset <= 1;
+
+    $display($time ,"End time of simulation");
+    $stop;
+end
+
+endmodule
