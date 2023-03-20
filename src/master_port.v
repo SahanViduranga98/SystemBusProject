@@ -14,7 +14,7 @@ module master_port #(parameter SLAVE_LEN=2, parameter ADDR_LEN=12, parameter DAT
 	input reset,
 	
 	input [1:0]instruction,
-	input [SLAVE_LEN-1:0]slave_select,
+	input slave_select,
 	input [ADDR_LEN-1:0]address,
 	input [DATA_LEN-1:0]data_out,
 	input [BURST_LEN-1:0]burst_num,

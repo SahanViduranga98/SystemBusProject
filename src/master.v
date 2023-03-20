@@ -55,7 +55,7 @@ module master_module #(parameter SLAVE_LEN=2, parameter ADDR_LEN=12, parameter D
 	
 	
 wire [1:0]instruction;
-wire [SLAVE_LEN-1:0]slave_select;
+wire slave_select;
 wire [ADDR_LEN-1:0]address;
 wire [DATA_LEN-1:0]data_out;
 wire [BURST_LEN-1:0]burst_num;
