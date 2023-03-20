@@ -87,7 +87,7 @@ output s3_rx_burst_num
 wire [1:0] bus_grant; 
 wire [1:0] slave_sel;  
 
-Bus_Arbiter Bus_Arbiter1(
+Arbiter Bus_Arbiter1(
 .sys_clk(sys_clk), 
 .sys_rst(sys_rst),
 .m1_request (m1_request), 
