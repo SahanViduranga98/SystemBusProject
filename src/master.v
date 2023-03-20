@@ -24,8 +24,8 @@ module master_module #(parameter SLAVE_LEN=2, parameter ADDR_LEN=12, parameter D
 	input clk, 
 	input reset,
 	output busy,
-	output [6:0]display1_pin,
-	output [6:0]display2_pin,
+	// output [6:0]display1_pin,
+	// output [6:0]display2_pin,
 	
 	input read,
 	input write,
