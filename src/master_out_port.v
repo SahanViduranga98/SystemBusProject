@@ -1,19 +1,30 @@
-/* 
- file name : master_out_port.v
- Description:
-	This file contains the output port of the master port.
-	It is responsible for accessing a slave.
- Maintainers : Sahan Viduranga <sahanvidurangassc767@gmail.com>
-					
-					
- Revision : v1.0 
-*/
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 03/20/2023 05:23:04 PM
+// Design Name: 
+// Module Name: master_out_port
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
 
 module master_out_port #(parameter SLAVE_LEN=2, parameter ADDR_LEN=12, parameter DATA_LEN=8, parameter BURST_LEN=12)(
 	input clk, 
 	input reset,
 	
-	input [SLAVE_LEN-1:0]slave_select,
+	input slave_select,
 	input [1:0]instruction, 
 	input [ADDR_LEN-1:0]address,
 	input [DATA_LEN-1:0]data,
@@ -82,7 +93,7 @@ begin
 					state <= TRANSMIT_SELECT;
 					master_ready<= 0;
 					approval_request <= 1;
-					tx_slave_select <= slave_select[count];
+					tx_slave_select <= slave_select;
 					master_valid <= 0;
 					write_en <= 0;
 					read_en <= 0;	
@@ -143,7 +154,7 @@ begin
 				state <= TRANSMIT_SELECT;
 				master_ready<= 0;
 				approval_request <= 1;
-				tx_slave_select <= slave_select[count];
+				tx_slave_select <= slave_select;
 				master_valid <= 0;
 				write_en <= 0;
 				read_en <= 0;	
@@ -186,7 +197,7 @@ begin
 					state <=WAIT_BUS;
 				master_ready <= 0;
 				approval_request <= 0;
-				tx_slave_select <= slave_select[count];
+				tx_slave_select <= slave_select;
 				master_valid <= 0;
 				write_en <= 0;
 				read_en <= 0;	
@@ -205,7 +216,7 @@ begin
 				state <=TRANSMIT_SELECT;
 				master_ready <= 0;
 				approval_request <= 1;
-				tx_slave_select <= slave_select[count];
+				tx_slave_select <= slave_select;
 				master_valid <= 0;
 				write_en <= 0;
 				read_en <= 0;	
@@ -304,7 +315,7 @@ begin
 					state <= WAIT_ARBITOR;
 					master_ready<= 0;
 					approval_request <= 1;
-					tx_slave_select <= slave_select[count];
+					tx_slave_select <= slave_select;
 					master_valid <= 0;
 					write_en <= 0;
 					read_en <= 0;	
