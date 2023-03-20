@@ -31,6 +31,7 @@ input trans_done,
 output reg m1_grant,
 output reg m2_grant,
 output reg arbiter_busy,
+output reg bus_busy,
 output reg[1:0] bus_grant, //indicates the master address to which the slave communicates
 output reg[1:0] slave_sel //indicates the slave address which was requested by the master
 
@@ -49,6 +50,7 @@ begin
             m1_grant <= 0;
             m2_grant <= 0;
             arbiter_busy <= 0;
+            bus_busy <=0;
             bus_grant <= 2'b00;
             slave_sel <= 2'b00; 
         end
@@ -60,6 +62,7 @@ begin
              m1_grant <= 1;
              m2_grant <= 0;
              arbiter_busy <= 1;
+             bus_busy <=1;
              slave_sel <= m1_slave_sel;
              bus_grant <= 2'd1;
              state <= MASTER1_SLAVE_SELECT_STATE;
@@ -72,6 +75,7 @@ begin
             m1_grant <= 0;
             m2_grant <= 1;
             arbiter_busy <= 1;
+            bus_busy <=1;
             slave_sel <= m2_slave_sel;
             bus_grant <= 2'd2;
             state <= MASTER2_SLAVE_SELECT_STATE;
@@ -82,6 +86,7 @@ begin
            m1_grant <= 0;
            m2_grant <= 1;
            arbiter_busy <= 1;
+           bus_busy <=1;
            slave_sel <= m2_slave_sel;
            bus_grant <= 2'd2;
            state <= MASTER2_SLAVE_SELECT_STATE;
@@ -91,6 +96,7 @@ begin
             m1_grant <= 0;
             m2_grant <= 0;
             arbiter_busy <= 0;
+            bus_busy <=0;
             slave_sel <= 0;
             bus_grant <= 2'd0;
             state <= IDLE_STATE;  
@@ -130,6 +136,7 @@ always @(posedge clk)
                 m1_grant <= 0;
                 m2_grant <= 0;
                 arbiter_busy <= 0;
+                bus_busy <=0;
                 bus_grant <= 2'b00;
                 slave_sel <= 2'b00;      
              end
